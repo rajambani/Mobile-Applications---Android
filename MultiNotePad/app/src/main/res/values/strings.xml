@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Multi Notes</string>
+
+    <string name="file_name">mynotes.json</string>
+    <string name="encoding">UTF-8</string>
+    <string name="no_file">No Notes File Present</string>
+    <string name="saved">Note Saved!</string>
+
+    <string name="title">Title</string>
+    <string name="date">Date</string>
+    <string name="description">Description</string>
+    <string name="item">Item</string>
+
+    <string name="title_activity_about">AboutActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="todo">TODO</string>
+    <string name="multi_notes">Multi Notes</string>
+    <string name="_2019_raj_ambani">©2019, Raj Ambani</string>
+    <string name="version_1_0">Version 1.0</string>
+</resources>
