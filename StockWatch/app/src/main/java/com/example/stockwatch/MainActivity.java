@@ -14,7 +14,7 @@ public class MainActivity extends AppCompatActivity
 {
 
     private static final String TAG = "MainActivity";
-    RecyclerView recyclerView;
+    public RecyclerView recyclerView;
     StockAdapter stockAdapter;
     List<Stock> stockList = new ArrayList<Stock>();
     HashMap<String, String> initialMap;
