@@ -19,20 +19,21 @@ import java.util.List;
 public class MyAsyncTaskLoadFinancialDetails extends AsyncTask<String, Void, String>
 {
     private static final String TAG = "MyAsyncTaskLoadFinancia";
-    private MainActivity ma;
+    private MainActivity mainActivity;
     private final String FINANCIAL_URL = "https://api.iextrading.com/1.0/stock/";
-    private List<Stock> stockList = new ArrayList<>();
+    private Stock stock;
 
-    public MyAsyncTaskLoadFinancialDetails(MainActivity ma)
+    public MyAsyncTaskLoadFinancialDetails(MainActivity mainActivity)
     {
-        this.ma = ma;
+        this.mainActivity = mainActivity;
     }
 
     @Override
     protected String doInBackground(String... symbol)
     {
         Uri.Builder buildURL = Uri.parse(FINANCIAL_URL).buildUpon();
-        buildURL.appendPath(symbol.toString().trim());
+        buildURL.appendPath(symbol[0].toString().trim());
+        //buildURL.appendPath("amzn");
         buildURL.appendPath("quote");
         buildURL.appendQueryParameter("displayPercent", "true");
 
@@ -57,6 +58,7 @@ public class MyAsyncTaskLoadFinancialDetails extends AsyncTask<String, Void, Str
 
         } catch (Exception e) {
             Log.e(TAG, "doInBackground: ", e);
+            e.printStackTrace();
             return null;
         }
 
@@ -76,14 +78,22 @@ public class MyAsyncTaskLoadFinancialDetails extends AsyncTask<String, Void, Str
                 String price = jsonobject.getString("latestPrice");
                 String priceChange = jsonobject.getString("change");
                 String percentChange = jsonobject.getString("changePercent");
-                stockList.add(new Stock(symnol, companyName, Double.parseDouble(price),
+
+                stock = (new Stock(symnol, companyName, Double.parseDouble(price),
                         Double.parseDouble(priceChange), Double.parseDouble(percentChange)));
             }
-            Log.d(TAG, "parseJSON: map size: " + stockList.size());
+            Log.d(TAG, "parseJSON: map size: " + stock);
         }
         catch(Exception ex)
         {
             ex.printStackTrace();
         }
+    }
+
+    @Override
+    protected void onPostExecute(String s)
+    {
+        mainActivity.addStocktoList(stock);
+        super.onPostExecute(s);
     }
 }

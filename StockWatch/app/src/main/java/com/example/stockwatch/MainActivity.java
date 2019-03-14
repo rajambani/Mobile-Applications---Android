@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity
 
         doAsyncLoadInitialData();
 
-        //stockList.add(new Stock("Amz", "Amazon", 12.30, 0.50, 2.4));
+        stockList.add(new Stock("Test", "Amazon", 12.30, 0.50, 2.4));
         recyclerView = findViewById(R.id.recyclerView);
         stockAdapter = new StockAdapter(stockList, this);
         recyclerView.setAdapter(stockAdapter);
@@ -119,8 +119,9 @@ public class MainActivity extends AppCompatActivity
     //This method will search for stocks from stock map and will return correct symbol.
     private void searchStock(String symbol)
     {
-        if(initialMap.containsKey(symbol))
+        if(initialMap.containsKey(symbol.toLowerCase().trim()))
         {
+            Log.d(TAG, "searchStock: found match symbol: "+ symbol);
             getSymbolDetails(symbol);
             //return symbol;
         }
@@ -138,10 +139,12 @@ public class MainActivity extends AppCompatActivity
         List<String> dialogList = new ArrayList<>();
         for(String key:initialMap.keySet())
         {
-            String value = initialMap.get(key);
-            if(key.contains(symbol))
+
+            String value = (String)initialMap.get(key);
+            if(((String)key).contains(symbol))
             {
-                dialogList.add(key + " - " + value);
+                Log.d(TAG, "checkList: key: "+ key);
+                dialogList.add((String)key + " - " + value);
             }
             else if(value.contains(symbol))
             {
@@ -191,9 +194,24 @@ public class MainActivity extends AppCompatActivity
     {
         if(! symbol.isEmpty())
         {
-
+            MyAsyncTaskLoadFinancialDetails at = new MyAsyncTaskLoadFinancialDetails(this);
+            at.execute(symbol);
+            Toast.makeText(MainActivity.this, "Stock found: " + symbol, Toast.LENGTH_SHORT).show();
         }
         else
             Toast.makeText(MainActivity.this, "Stock Name is empty!", Toast.LENGTH_SHORT).show();
+    }
+
+    public void addStocktoList(Stock stock)
+    {
+        //Check fro duplicates
+        if(! stockList.contains(stock))
+        {
+            stockList.add(stock);
+            stockAdapter.notifyDataSetChanged();
+        }
+        else
+            Toast.makeText(MainActivity.this, "Duplicate Stocke Entry!", Toast.LENGTH_SHORT).show();
+
     }
 }

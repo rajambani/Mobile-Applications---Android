@@ -1,8 +1,10 @@
 package com.example.stockwatch;
 
+import android.support.annotation.NonNull;
+
 import java.io.Serializable;
 
-public class Stock implements Serializable
+public class Stock implements Serializable, Comparable<Stock>
 {
     private String symbol;
     private String companyName;
@@ -45,9 +47,35 @@ public class Stock implements Serializable
     }
 
     @Override
+    public int hashCode()
+    {
+        return 1;
+    }
+
+
+
+    @Override
     public String toString()
     {
         String str = this.symbol + " " + this.companyName;
         return str;
+    }
+
+    @Override
+    public int compareTo(@NonNull Stock o)
+    {
+        return o.getSymbol().toLowerCase().compareTo(getSymbol().toLowerCase());
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        Stock st = (Stock) obj;
+        if(this == obj)
+            return true;
+        if(! (obj instanceof Stock))
+            return false;
+
+        return this.getSymbol().equalsIgnoreCase(st.getSymbol());
     }
 }

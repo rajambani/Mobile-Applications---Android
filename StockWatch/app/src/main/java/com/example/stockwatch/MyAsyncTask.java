@@ -19,7 +19,8 @@ public class MyAsyncTask extends AsyncTask<String, Void, Void>
     private static final String TAG = "MyAsyncTask";
     private MainActivity mainActivity;
     HashMap<String, String> map = new HashMap<>();
-    final String stockURL = "https://api.iextrading.com/1.0/ref-data/symbols";
+    private final String stockURL = "https://api.iextrading.com/1.0/ref-data/symbols/";
+    //private final String stockURL = "https://www.google.com";
 
     public MyAsyncTask(MainActivity mainActivity)
     {
@@ -29,7 +30,7 @@ public class MyAsyncTask extends AsyncTask<String, Void, Void>
     @Override
     protected Void doInBackground(String ... str)
     {
-        Uri.Builder buildURL = Uri.parse(stockURL).buildUpon();
+        Uri.Builder buildURL = Uri.parse(this.stockURL).buildUpon();
         String urlToUse = buildURL.build().toString();
         Log.d(TAG, "doInBackground: " + urlToUse);
 
@@ -52,7 +53,8 @@ public class MyAsyncTask extends AsyncTask<String, Void, Void>
 
         }
         catch (Exception e) {
-            Log.e(TAG, "doInBackground: ", e);
+            Log.e(TAG, "Error in doInBackground: ", e);
+            e.printStackTrace();
             return null;
         }
 
@@ -73,7 +75,7 @@ public class MyAsyncTask extends AsyncTask<String, Void, Void>
                     String symnol = jsonobject.getString("symbol");
                     String companyName = jsonobject.getString("name");
 
-                    map.put(symnol, companyName);
+                    map.put(symnol.toLowerCase().trim(), companyName);
                 }
                 Log.d(TAG, "parseJSON: map size: " + map.size());
             }
