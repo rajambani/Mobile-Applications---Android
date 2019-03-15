@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="#7CFC00">
 
     <TextView
         android:id="@+id/symbol"
@@ -33,39 +34,42 @@
         android:id="@+id/price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="8dp"
         android:text="price"
-        android:textAlignment="viewStart"
-        android:textSize="24sp"
+        android:textAlignment="textEnd"
+        android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/symbol"
+        app:layout_constraintEnd_toStartOf="@+id/priceChange"
+        app:layout_constraintHorizontal_bias="0.88"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/percentageChange"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
         android:text="percent"
         android:textAlignment="viewStart"
-        android:textSize="24sp"
+        android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/priceChange"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/priceChange"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="60dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:text="price"
         android:textAlignment="viewStart"
-        android:textSize="24sp"
+        android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@+id/price"
+        app:layout_constraintEnd_toStartOf="@+id/percentageChange"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView

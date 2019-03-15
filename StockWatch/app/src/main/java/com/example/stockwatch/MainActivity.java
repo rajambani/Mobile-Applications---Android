@@ -1,6 +1,9 @@
 package com.example.stockwatch;
 
 import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +18,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -23,24 +27,81 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = "MainActivity";
     public RecyclerView recyclerView;
-    StockAdapter stockAdapter;
+    private SwipeRefreshLayout swiper;
+
+    private StockAdapter stockAdapter;
     List<Stock> stockList = new ArrayList<Stock>();
     HashMap<String, String> initialMap;
+    private DatabaseHandler databaseHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        Log.d(TAG, "onCreate: ");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#000000")));
 
         doAsyncLoadInitialData();
 
-        stockList.add(new Stock("Test", "Amazon", 12.30, 0.50, 2.4));
+        //stockList.add(new Stock("Test", "Amazon", 12.30, 0.50, 2.4));
         recyclerView = findViewById(R.id.recyclerView);
         stockAdapter = new StockAdapter(stockList, this);
+        Collections.sort(stockList, Collections.<Stock>reverseOrder());
         recyclerView.setAdapter(stockAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        databaseHandler = new DatabaseHandler(this);
+
+        swiper = (SwipeRefreshLayout)findViewById(R.id.swipeRefreshLayout);
+        swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshData();
+                //Set this to false else when the view is refreshed even if its task its done it shows the refreshing symbol
+                swiper.setRefreshing(false);
+            }
+        });
+    }
+
+
+    //This method will fetch new data by service call.
+    private void refreshData()
+    {
+        ArrayList<Stock> list = databaseHandler.loadStocks();
+        list.addAll(stockList);
+        stockList.clear();
+        Log.d(TAG, "onResume: stockList " + stockList);
+        for(Stock st:list)
+        {
+            //Delete old stock from db.
+            databaseHandler.deleteStock(st.getSymbol());
+
+            MyAsyncTaskLoadFinancialDetails at = new MyAsyncTaskLoadFinancialDetails(this);
+            at.execute(st.getSymbol());
+        }
+    }
+
+
+
+    @Override
+    protected void onResume() {
+        //databaseHandler.dumpDbToLog();
+        ArrayList<Stock> list = databaseHandler.loadStocks();
+        stockList.clear();
+        Log.d(TAG, "onResume: stockList " + stockList);
+        stockList.addAll(list);
+        Log.d(TAG, "onResume: " + list);
+        Collections.sort(stockList, Collections.<Stock>reverseOrder());
+        stockAdapter.notifyDataSetChanged();
+
+        super.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        databaseHandler.shutDown();
+        super.onDestroy();
     }
 
     //This method will load initial data and store it in a hashmap
@@ -208,7 +269,12 @@ public class MainActivity extends AppCompatActivity
         if(! stockList.contains(stock))
         {
             stockList.add(stock);
+            Collections.sort(stockList, Collections.<Stock>reverseOrder());
             stockAdapter.notifyDataSetChanged();
+            Log.d(TAG, "addStocktoList: stock added: "+ stock.toString());
+            //this will add stock to db.
+            databaseHandler.addStock(stock);
+            //stockAdapter.notifyDataSetChanged();
         }
         else
             Toast.makeText(MainActivity.this, "Duplicate Stocke Entry!", Toast.LENGTH_SHORT).show();
