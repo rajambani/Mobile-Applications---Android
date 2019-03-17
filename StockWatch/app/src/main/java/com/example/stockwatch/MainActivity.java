@@ -9,21 +9,23 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputFilter;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity
-{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener {
 
     private static final String TAG = "MainActivity";
     public RecyclerView recyclerView;
@@ -33,6 +35,8 @@ public class MainActivity extends AppCompatActivity
     List<Stock> stockList = new ArrayList<Stock>();
     HashMap<String, String> initialMap;
     private DatabaseHandler databaseHandler;
+
+    String flag = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -70,8 +74,8 @@ public class MainActivity extends AppCompatActivity
     {
         ArrayList<Stock> list = databaseHandler.loadStocks();
         list.addAll(stockList);
-        stockList.clear();
-        Log.d(TAG, "onResume: stockList " + stockList);
+       this.stockList.clear();
+        Log.d(TAG, "refreshData: stockList after clear: "+ stockList);
         for(Stock st:list)
         {
             //Delete old stock from db.
@@ -133,6 +137,7 @@ public class MainActivity extends AppCompatActivity
         switch (item.getItemId())
         {
             case R.id.addStock:
+                flag = "add";
                 addStock();
                 return true;
             default:
@@ -147,6 +152,16 @@ public class MainActivity extends AppCompatActivity
         // Create an edittext and set it to be the builder's view
         final EditText et = new EditText(this);
         et.setInputType(InputType.TYPE_CLASS_TEXT);
+        //et.setFilters(new InputFilter[]{new InputFilter.AllCaps()});
+
+        //
+        ArrayList<InputFilter> curInputFilters = new ArrayList<InputFilter>(Arrays.asList(et.getFilters()));
+        curInputFilters.add(0, new AlphabetClass());
+        curInputFilters.add(1, new InputFilter.AllCaps());
+        InputFilter[] newInputFilters = curInputFilters.toArray(new InputFilter[curInputFilters.size()]);
+        et.setFilters(newInputFilters);
+        //
+
         et.setGravity(Gravity.CENTER_HORIZONTAL);
         builder.setView(et);
 
@@ -157,7 +172,7 @@ public class MainActivity extends AppCompatActivity
             {
                 String symbol;
                 if(! et.getText().toString().trim().isEmpty())
-                    searchStock(et.getText().toString().trim());
+                    searchStock(et.getText().toString().trim().toLowerCase());
                 else
                     Toast.makeText(MainActivity.this, "Company Name cannot be empty!", Toast.LENGTH_SHORT).show();
 
@@ -205,16 +220,37 @@ public class MainActivity extends AppCompatActivity
             if(((String)key).contains(symbol))
             {
                 Log.d(TAG, "checkList: key: "+ key);
-                dialogList.add((String)key + " - " + value);
+                dialogList.add((String)key.toUpperCase() + " - " + value);
             }
-            else if(value.contains(symbol))
-            {
-                dialogList.add(key + " - " + value);
-            }
+
+            //This code is for matching the input string with company names too.
+//            else if(value.contains(symbol))
+//            {
+//                dialogList.add(key.toUpperCase() + " - " + value);
+//            }
         }
         Log.d(TAG, "checkList: dialogList: "+ dialogList);
+        if(dialogList.size() < 1)
+        {
+            displayDialog();
+            return "";
+        }
         String selectedSymbol = displaySymbolList(dialogList);
         return "";
+    }
+
+    private void displayDialog()
+    {
+        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+        alertDialog.setTitle("Not Found ! !");
+        alertDialog.setMessage("There are NO stocks found with this symbol.");
+        //alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+//                new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//                    }
+//                });
+        alertDialog.show();
     }
 
     //This method will display doalog with list of comapnies and allow user to select one.
@@ -266,18 +302,100 @@ public class MainActivity extends AppCompatActivity
     public void addStocktoList(Stock stock)
     {
         //Check fro duplicates
-        if(! stockList.contains(stock))
+        if(this.stockList.contains(stock))
         {
-            stockList.add(stock);
-            Collections.sort(stockList, Collections.<Stock>reverseOrder());
-            stockAdapter.notifyDataSetChanged();
-            Log.d(TAG, "addStocktoList: stock added: "+ stock.toString());
-            //this will add stock to db.
-            databaseHandler.addStock(stock);
-            //stockAdapter.notifyDataSetChanged();
+            stockList.remove(stock);
+            databaseHandler.deleteStock(stock.getSymbol());
+            if(flag.equalsIgnoreCase("add"))
+            {
+                //error dialog
+                flag = "";
+                showWarningDialog();
+
+
+            }
+            //Toast.makeText(MainActivity.this, "Duplicate Stocke Entry! "+ stock, Toast.LENGTH_SHORT).show();
         }
-        else
-            Toast.makeText(MainActivity.this, "Duplicate Stocke Entry!", Toast.LENGTH_SHORT).show();
+        this.stockList.add(stock);
+        Collections.sort(stockList, Collections.<Stock>reverseOrder());
+        stockAdapter.notifyDataSetChanged();
+        //Log.d(TAG, "addStocktoList: stock added: "+ stock.toString());
+        //this will add stock to db.
+        databaseHandler.addStock(stock);
+        //stockAdapter.notifyDataSetChanged();
 
     }
+
+    private void showWarningDialog()
+    {
+        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+        alertDialog.setTitle("Duplicate Stock !");
+        alertDialog.setMessage("Stock symbol " +""+ " is already displayed.");
+        //alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+//                new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        dialog.dismiss();
+//                    }
+//                });
+        alertDialog.show();
+    }
+
+    // From OnClickListener
+    // This method will open the link and take it to the website.
+    @Override
+    public void onClick(View v)
+    {  // click listener called by ViewHolder clicks
+
+        int pos = recyclerView.getChildLayoutPosition(v);
+//        Note note = noteList.get(pos);
+//        removeNote = note;
+//        //We delete this entry from the list to ensure that there is no duplicate entry in it.
+//        //noteList.remove(note);
+//        addNote(note);
+        //Toast.makeText(v.getContext(), "SHORT " + note, Toast.LENGTH_SHORT).show();
+    }
+
+    // From OnLongClickListener
+    //This is for deleting stocks.
+    @Override
+    public boolean onLongClick(View v)
+    {  // long click listener called by ViewHolder long clicks
+        //Log.d(TAG, "onLongClick: list size: "+ noteList.size());
+        checkDialogBox(v);
+        return false;
+    }
+
+    void checkDialogBox(final View v)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        //builder.setIcon(R.drawable.icon1);
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener()
+        {
+            public void onClick(DialogInterface dialog, int id)
+            {
+                int pos = recyclerView.getChildLayoutPosition(v);
+                Stock stock = stockList.get(pos);
+                stockList.remove(stock);
+                databaseHandler.deleteStock(stock.getSymbol());
+                //Log.d(TAG, "onLongClick: list size: "+ noteList.size());
+                stockAdapter.notifyDataSetChanged();
+            }
+        });
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener()
+        {
+            public void onClick(DialogInterface dialog, int id)
+            {
+                // Do Nothing.
+            }
+        });
+
+        builder.setMessage("Are you sure you want to delete this item?");
+        builder.setTitle("DELETE?");
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        getSupportActionBar().setTitle("Multi Notes(" + stockList.size() + ")");
+    }
 }
+
+

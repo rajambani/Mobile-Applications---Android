@@ -1,6 +1,8 @@
 package com.example.stockwatch;
 
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,8 +32,8 @@ public class StockAdapter extends RecyclerView.Adapter<StockViewHolder>
         View rowView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.stock_row, parent, false);
 
-        //rowView.setOnClickListener(mainActivity);
-        //rowView.setOnLongClickListener(mainActivity);
+        rowView.setOnClickListener(mainActivity);
+        rowView.setOnLongClickListener(mainActivity);
 
         return new StockViewHolder(rowView);
     }
@@ -48,6 +50,15 @@ public class StockAdapter extends RecyclerView.Adapter<StockViewHolder>
         holder.price.setText(String.valueOf(stock.getPrice()));
         holder.priceChange.setText(String.valueOf(stock.getPriceChange()));
         holder.percentageChange.setText("("+ String.valueOf(stock.getPercentageChange()) + "%)");
+
+        if(stock.getPriceChange() < 0)
+        {
+            holder.rowConstraintLayout.setBackgroundColor(ContextCompat.getColor(mainActivity, R.color.Red));
+        }
+        else
+        {
+            holder.rowConstraintLayout.setBackgroundColor(ContextCompat.getColor(mainActivity, R.color.Green));
+        }
         //uncomment this to set icon for change in stock price.
         //holder.changeIcon.setImageIcon();
     }
