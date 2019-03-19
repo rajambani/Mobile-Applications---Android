@@ -6,5 +6,6 @@
         android:id="@+id/addStock"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/add_stock"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom"
+        android:background="#7CFC00"/>
 </menu>

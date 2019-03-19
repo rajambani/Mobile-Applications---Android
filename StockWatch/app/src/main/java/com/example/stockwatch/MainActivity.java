@@ -28,6 +28,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#000000")));
 
         doAsyncLoadInitialData();
-
+        flag = "";
 
         Log.d(TAG, "onCreate: stockList: "+ stockList.size());
         recyclerView = findViewById(R.id.recyclerView);
@@ -108,9 +109,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         databaseHandler.dumpDbToLog();
         ArrayList<Stock> list = databaseHandler.loadStocks();
         stockList.clear();
-        Log.d(TAG, "onResume: stockList " + stockList);
+       //Log.d(TAG, "onResume: stockList " + stockList);
         stockList.addAll(list);
-        Log.d(TAG, "onResume: " + list);
+        //Log.d(TAG, "onResume: " + list);
+        //Collections.sort(stockList, Collections.<Stock>reverseOrder());
+        //stockAdapter.notifyDataSetChanged();
+
+        if(! doNetCheck())
+        {
+            ArrayList<Stock> l = new ArrayList<>();
+            l.addAll(stockList);
+            stockList.clear();
+            for(Stock st:list)
+            {
+                st.setPrice(0);
+                st.setPriceChange(0);
+                st.setPercentageChange(0);
+                stockList.add(new Stock(st.getSymbol(), st.getCompanyName(), st.getPrice(), st.getPriceChange(),
+                        st.getPercentageChange()));
+            }
+        }
+        Log.d(TAG, "onResume: " + stockList);
         Collections.sort(stockList, Collections.<Stock>reverseOrder());
         stockAdapter.notifyDataSetChanged();
 
@@ -119,6 +138,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
+
+        List<Stock> list = stockList;
+        stockList.clear();
+        if(doNetCheck())
+        {
+            for(Stock st:list)
+            {
+                //Delete old stock from db.
+                databaseHandler.deleteStock(st.getSymbol());
+                flag = "";
+
+                MyAsyncTaskLoadFinancialDetails at = new MyAsyncTaskLoadFinancialDetails(this);
+                at.execute(st.getSymbol());
+            }
+        }
         for(Stock st:stockList)
         {
             Log.d(TAG, "onDestroy: stock details: "+ st);
@@ -139,6 +173,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
       void populateInitialMap(HashMap<String, String> initialMap)
       {
           this.initialMap = initialMap;
+          Log.d(TAG, "populateInitialMap: " + this.initialMap);
       }
 
     //This method ensures that menu is visible on the main activity.
@@ -158,7 +193,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         {
             case R.id.addStock:
                 if(doNetCheck()) {
+
+                    if(stockList.size() > 0)
+                    {
+                        if(stockList.get(0).getPrice() == 0)
+                        {
+                            refreshData();
+                        }
+                    }
+
                     flag = "add";
+                    if(initialMap.size() < 1)
+                    {
+                        doAsyncLoadInitialData();
+                    }
                     addStock();
                 }
                 return true;
@@ -217,13 +265,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //This method will search for stocks from stock map and will return correct symbol.
     private void searchStock(String symbol)
     {
-        if(initialMap.containsKey(symbol.toLowerCase().trim()))
-        {
-            Log.d(TAG, "searchStock: found match symbol: "+ symbol);
-            getSymbolDetails(symbol);
-            //return symbol;
-        }
-        else
+//        if(initialMap.containsKey(symbol.toLowerCase().trim()))
+//        {
+//            Log.d(TAG, "searchStock: found match symbol: "+ symbol);
+//            getSymbolDetails(symbol);
+//            //return symbol;
+//        }
+        if(true)
         {
             String resultSymbol = checkList(symbol.toLowerCase());
         }
@@ -257,7 +305,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             displayDialog();
             return "";
         }
-        String selectedSymbol = displaySymbolList(dialogList);
+        else if(dialogList.size() == 1)
+        {
+            getSymbolDetails(dialogList.get(0).split(" - ")[0]);
+            return"";
+        }
+        else
+            displaySymbolList(dialogList);
         return "";
     }
 
@@ -272,6 +326,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //This method will display doalog with list of comapnies and allow user to select one.
     private String displaySymbolList(final List<String> dialogList)
     {
+        Collections.sort(dialogList);
+
          //covert list into array of char sequence.
         final CharSequence[] sArray = new CharSequence[dialogList.size()];
         for (int i = 0; i < dialogList.size(); i++)
