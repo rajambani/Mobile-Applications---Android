@@ -75,7 +75,7 @@ public class MyAsyncTask extends AsyncTask<String, Void, Void>
                     String symnol = jsonobject.getString("symbol");
                     String companyName = jsonobject.getString("name");
 
-                    map.put(symnol.toLowerCase().trim(), companyName);
+                    map.put(symnol.toLowerCase().trim(), companyName.toLowerCase().trim());
                 }
                 Log.d(TAG, "parseJSON: map size: " + map.size());
             }

@@ -37,7 +37,7 @@ public class DatabaseHandler extends SQLiteOpenHelper
                     COMPANY_NAME + " TEXT not null, " +
                     PRICE + " REAL not null, " +
                     PRICE_CHANGE + " REAL not null, " +
-                    PERCENT_CHANGE + " REAL not null)";
+                    PERCENT_CHANGE + " DOUBLE not null)";
 
     private SQLiteDatabase database;
 
@@ -86,7 +86,7 @@ public class DatabaseHandler extends SQLiteOpenHelper
                 String companyName = cursor.getString(1);
                 double price = cursor.getDouble(2);
                 double priceChange = cursor.getDouble(3);
-                double percentageChange = cursor.getInt(4);
+                double percentageChange = cursor.getDouble(4);
                 Stock s = new Stock(symbol, companyName, price, priceChange, percentageChange);
                 stockArrayList.add(s);
                 cursor.moveToNext();
@@ -142,5 +142,33 @@ public class DatabaseHandler extends SQLiteOpenHelper
     public void shutDown()
     {
         database.close();
+    }
+
+    public void dumpDbToLog() {
+        Cursor cursor = database.rawQuery("select * from " + TABLE_NAME, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+
+            Log.d(TAG, "dumpDbToLog: vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv");
+            for (int i = 0; i < cursor.getCount(); i++) {
+                String title = cursor.getString(0);
+                String author = cursor.getString(1);
+//                String isbn = cursor.getString(2);
+//                String publisher = cursor.getString(3);
+//                int year = cursor.getInt(4);
+                double cost = cursor.getFloat(4);
+                Log.d(TAG, "dumpDbToLog: " +
+                        String.format("%s %-18s", SYMBOL + ":", title) +
+                        String.format("%s %-18s", COMPANY_NAME + ":", author) +
+//                        String.format("%s %-18s", PRICE + ":", isbn) +
+//                        String.format("%s %-18s", PUBLISHER + ":", publisher) +
+//                        String.format("%s %-18s", YEAR + ":", year) +
+                        String.format("%s %-18s", PERCENT_CHANGE + ":", cost));
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+
+        Log.d(TAG, "dumpDbToLog: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
     }
 }

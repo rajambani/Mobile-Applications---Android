@@ -46,6 +46,26 @@ public class Stock implements Serializable, Comparable<Stock>
         return percentageChange;
     }
 
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public void setPriceChange(double priceChange) {
+        this.priceChange = priceChange;
+    }
+
+    public void setPercentageChange(double percentageChange) {
+        this.percentageChange = percentageChange;
+    }
+
     @Override
     public int hashCode()
     {
@@ -57,7 +77,8 @@ public class Stock implements Serializable, Comparable<Stock>
     @Override
     public String toString()
     {
-        String str = this.symbol + " " + this.companyName;
+        String str = this.symbol + " " + this.companyName + " " + this.price + " " + this.priceChange +
+                " " + this.percentageChange;
         return str;
     }
 

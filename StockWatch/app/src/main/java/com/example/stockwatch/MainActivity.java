@@ -1,8 +1,13 @@
 package com.example.stockwatch;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -16,6 +21,8 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -42,27 +49,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState)
     {
         Log.d(TAG, "onCreate: ");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#000000")));
 
         doAsyncLoadInitialData();
 
-        //stockList.add(new Stock("Test", "Amazon", 12.30, 0.50, 2.4));
+
+        Log.d(TAG, "onCreate: stockList: "+ stockList.size());
         recyclerView = findViewById(R.id.recyclerView);
         stockAdapter = new StockAdapter(stockList, this);
         Collections.sort(stockList, Collections.<Stock>reverseOrder());
         recyclerView.setAdapter(stockAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        stockAdapter.notifyDataSetChanged();
 
         databaseHandler = new DatabaseHandler(this);
+
 
         swiper = (SwipeRefreshLayout)findViewById(R.id.swipeRefreshLayout);
         swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshData();
-                //Set this to false else when the view is refreshed even if its task its done it shows the refreshing symbol
+                if(doNetCheck())
+                {
+                    flag = "";
+                    refreshData();
+                    //Set this to false else when the view is refreshed even if its task its done it shows the refreshing symbol
+                }
                 swiper.setRefreshing(false);
             }
         });
@@ -74,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     {
         ArrayList<Stock> list = databaseHandler.loadStocks();
         list.addAll(stockList);
-       this.stockList.clear();
+        stockList.clear();
         Log.d(TAG, "refreshData: stockList after clear: "+ stockList);
         for(Stock st:list)
         {
@@ -90,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onResume() {
-        //databaseHandler.dumpDbToLog();
+        databaseHandler.dumpDbToLog();
         ArrayList<Stock> list = databaseHandler.loadStocks();
         stockList.clear();
         Log.d(TAG, "onResume: stockList " + stockList);
@@ -104,6 +119,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
+        for(Stock st:stockList)
+        {
+            Log.d(TAG, "onDestroy: stock details: "+ st);
+            databaseHandler.updateStock(st);
+        }
         databaseHandler.shutDown();
         super.onDestroy();
     }
@@ -137,8 +157,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (item.getItemId())
         {
             case R.id.addStock:
-                flag = "add";
-                addStock();
+                if(doNetCheck()) {
+                    flag = "add";
+                    addStock();
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -203,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         else
         {
-            String resultSymbol = checkList(symbol);
+            String resultSymbol = checkList(symbol.toLowerCase());
         }
 
         //return "";
@@ -224,10 +246,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             //This code is for matching the input string with company names too.
-//            else if(value.contains(symbol))
-//            {
-//                dialogList.add(key.toUpperCase() + " - " + value);
-//            }
+            else if(value.contains(symbol))
+            {
+                dialogList.add(key.toUpperCase() + " - " + value);
+            }
         }
         Log.d(TAG, "checkList: dialogList: "+ dialogList);
         if(dialogList.size() < 1)
@@ -244,12 +266,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
         alertDialog.setTitle("Not Found ! !");
         alertDialog.setMessage("There are NO stocks found with this symbol.");
-        //alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-//                new DialogInterface.OnClickListener() {
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        dialog.dismiss();
-//                    }
-//                });
         alertDialog.show();
     }
 
@@ -301,28 +317,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void addStocktoList(Stock stock)
     {
-        //Check fro duplicates
-        if(this.stockList.contains(stock))
-        {
-            stockList.remove(stock);
-            databaseHandler.deleteStock(stock.getSymbol());
-            if(flag.equalsIgnoreCase("add"))
+        //Check for duplicates
+        if(doNetCheck()) {
+            if (stockList.contains(stock))
             {
-                //error dialog
-                flag = "";
-                showWarningDialog();
-
-
+                stockList.remove(stock);
+                Log.d(TAG, "addStocktoList: stock deleted: "+ stock.getSymbol());
+                databaseHandler.deleteStock(stock.getSymbol());
+                Log.d(TAG, "addStocktoList: stockNames:" + stockList);
+                if (flag.equalsIgnoreCase("add"))
+                {
+                    //error dialog
+                    //flag = "";
+                    showWarningDialog();
+                }
+                //Toast.makeText(MainActivity.this, "Duplicate Stocke Entry! "+ stock, Toast.LENGTH_SHORT).show();
             }
-            //Toast.makeText(MainActivity.this, "Duplicate Stocke Entry! "+ stock, Toast.LENGTH_SHORT).show();
+            this.stockList.add(stock);
+            Collections.sort(stockList, Collections.<Stock>reverseOrder());
+            stockAdapter.notifyDataSetChanged();
+            Log.d(TAG, "addStocktoList: stock added: "+ stock.toString());
+            //this will add stock to db.
+            databaseHandler.addStock(stock);
+            stockAdapter.notifyDataSetChanged();
         }
-        this.stockList.add(stock);
-        Collections.sort(stockList, Collections.<Stock>reverseOrder());
-        stockAdapter.notifyDataSetChanged();
-        //Log.d(TAG, "addStocktoList: stock added: "+ stock.toString());
-        //this will add stock to db.
-        databaseHandler.addStock(stock);
-        //stockAdapter.notifyDataSetChanged();
+        flag = "";
 
     }
 
@@ -346,13 +365,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v)
     {  // click listener called by ViewHolder clicks
 
+        Log.d(TAG, "onClick: ");
         int pos = recyclerView.getChildLayoutPosition(v);
-//        Note note = noteList.get(pos);
-//        removeNote = note;
-//        //We delete this entry from the list to ensure that there is no duplicate entry in it.
-//        //noteList.remove(note);
-//        addNote(note);
-        //Toast.makeText(v.getContext(), "SHORT " + note, Toast.LENGTH_SHORT).show();
+        String address = "http://www.marketwatch.com/investing/stock/" + stockList.get(pos).getSymbol();
+        Log.d(TAG, "onClick:  address: " + address);
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(address));
+        startActivity(i);
     }
 
     // From OnLongClickListener
@@ -361,6 +380,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onLongClick(View v)
     {  // long click listener called by ViewHolder long clicks
         //Log.d(TAG, "onLongClick: list size: "+ noteList.size());
+        flag = "";
         checkDialogBox(v);
         return false;
     }
@@ -377,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Stock stock = stockList.get(pos);
                 stockList.remove(stock);
                 databaseHandler.deleteStock(stock.getSymbol());
-                //Log.d(TAG, "onLongClick: list size: "+ noteList.size());
+                //Log.d(TAG, "onLongClick: list size: "+ stockList.size());
                 stockAdapter.notifyDataSetChanged();
             }
         });
@@ -389,13 +409,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        builder.setMessage("Are you sure you want to delete this item?");
+        builder.setMessage("Are you sure you want to delete this stock?");
         builder.setTitle("DELETE?");
 
         AlertDialog dialog = builder.create();
         dialog.show();
-        getSupportActionBar().setTitle("Multi Notes(" + stockList.size() + ")");
     }
+
+    //This method is to check network connectivity
+    private boolean doNetCheck()
+    {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null)
+        {
+            Toast.makeText(this, "Cannot access ConnectivityManager", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+
+        if (netInfo != null && netInfo.isConnected())
+        {
+            Log.d(TAG, "doNetCheck: Internet is Connected !");
+            return true;
+        }
+        else {
+            showNoNetworkDialog();
+            return false;
+        }
+    }
+
+    private void showNoNetworkDialog()
+    {
+        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+        alertDialog.setTitle("No Network Connection !!!");
+        alertDialog.setMessage("Please Check Your Internet Connection and Try Again.");
+        alertDialog.show();
+    }
+
 }
 
 

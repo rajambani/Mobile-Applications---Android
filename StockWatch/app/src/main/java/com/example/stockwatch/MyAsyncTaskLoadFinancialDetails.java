@@ -38,7 +38,7 @@ public class MyAsyncTaskLoadFinancialDetails extends AsyncTask<String, Void, Str
         buildURL.appendQueryParameter("displayPercent", "true");
 
         String urlToUse = buildURL.build().toString();
-        Log.d(TAG, "doInBackground: the url obtained is "+urlToUse);
+        //Log.d(TAG, "doInBackground: the url obtained is "+urlToUse);
 
         StringBuilder sb = new StringBuilder();
         try {

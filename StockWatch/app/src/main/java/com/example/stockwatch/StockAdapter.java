@@ -49,15 +49,25 @@ public class StockAdapter extends RecyclerView.Adapter<StockViewHolder>
         holder.companyName.setText(stock.getCompanyName());
         holder.price.setText(String.valueOf(stock.getPrice()));
         holder.priceChange.setText(String.valueOf(stock.getPriceChange()));
-        holder.percentageChange.setText("("+ String.valueOf(stock.getPercentageChange()) + "%)");
+
+        double percentageChange = (double)( (stock.getPercentageChange()) * 100.00 / 100.00);
+        String perc = String.format("%.2f", percentageChange);
+
+        //holder.percentageChange.setText("("+ String.valueOf(percentageChange) + "%)");
+        holder.percentageChange.setText("("+ perc + "%)");
 
         if(stock.getPriceChange() < 0)
         {
             holder.rowConstraintLayout.setBackgroundColor(ContextCompat.getColor(mainActivity, R.color.Red));
+            //holder.changeIcon.setImageIcon(R.drawable.baseline_arrow_drop_down_black_18dp);
+            holder.priceChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.down, 0,0,0);
+            //mainActivity.getResources().getDrawable(R.drawable.d);
+            //holder.tvPriceChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_down_24, 0,0,0);
         }
         else
         {
             holder.rowConstraintLayout.setBackgroundColor(ContextCompat.getColor(mainActivity, R.color.Green));
+            holder.priceChange.setCompoundDrawablesWithIntrinsicBounds(R.drawable.up, 0,0,0);
         }
         //uncomment this to set icon for change in stock price.
         //holder.changeIcon.setImageIcon();
