@@ -194,6 +194,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.addStock:
                 if(doNetCheck()) {
 
+                    //This will refresh data once you switch on data after entering the app with data switched off.
                     if(stockList.size() > 0)
                     {
                         if(stockList.get(0).getPrice() == 0)
@@ -202,11 +203,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     }
 
-                    flag = "add";
                     if(initialMap.size() < 1)
                     {
                         doAsyncLoadInitialData();
                     }
+                    flag = "add";
+                    Log.d(TAG, "onOptionsItemSelected: flag set: " + flag);
                     addStock();
                 }
                 return true;
@@ -282,6 +284,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //This method will populate list of possible stock symbols to the user.
     private String checkList(String symbol)
     {
+        flag = "add";
         List<String> dialogList = new ArrayList<>();
         for(String key:initialMap.keySet())
         {
@@ -374,25 +377,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void addStocktoList(Stock stock)
     {
         //Check for duplicates
+        Log.d(TAG, "addStocktoList: stockNames: 1 " + stockList);
+        Log.d(TAG, "onOptionsItemSelected: flag set 1: " + flag + Thread.getAllStackTraces());
         if(doNetCheck()) {
             if (stockList.contains(stock))
             {
                 stockList.remove(stock);
                 Log.d(TAG, "addStocktoList: stock deleted: "+ stock.getSymbol());
                 databaseHandler.deleteStock(stock.getSymbol());
-                Log.d(TAG, "addStocktoList: stockNames:" + stockList);
+                Log.d(TAG, "addStocktoList: stockNames 2 :" + stockList + " flag:" + flag);
                 if (flag.equalsIgnoreCase("add"))
                 {
                     //error dialog
                     //flag = "";
+                    Log.d(TAG, "addStocktoList: stockNames 2 flag set to add:" + stockList);
                     showWarningDialog();
                 }
                 //Toast.makeText(MainActivity.this, "Duplicate Stocke Entry! "+ stock, Toast.LENGTH_SHORT).show();
             }
-            this.stockList.add(stock);
+            stockList.add(stock);
             Collections.sort(stockList, Collections.<Stock>reverseOrder());
             stockAdapter.notifyDataSetChanged();
-            Log.d(TAG, "addStocktoList: stock added: "+ stock.toString());
+            //Log.d(TAG, "addStocktoList: stock added: "+ stock.toString());
+            Log.d(TAG, "addStocktoList: stockNames 3 :" + stockList);
             //this will add stock to db.
             databaseHandler.addStock(stock);
             stockAdapter.notifyDataSetChanged();
@@ -436,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onLongClick(View v)
     {  // long click listener called by ViewHolder long clicks
         //Log.d(TAG, "onLongClick: list size: "+ noteList.size());
-        flag = "";
+        //flag = "";
         checkDialogBox(v);
         return false;
     }
