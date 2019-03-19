@@ -10,10 +10,7 @@
     <option name="TOOL_WINDOW_CONFIGURED_FILTER" value="No Filters" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="026af71a-72b3-4947-9ad3-1f8fa9cfb973" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/stockwatch/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/stockwatch/MainActivity.java" afterDir="false" />
-    </list>
+    <list default="true" id="026af71a-72b3-4947-9ad3-1f8fa9cfb973" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +28,7 @@
     <session id="870868839">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="4" />
+          <entry key="project.closed" value="5" />
           <entry key="project.open.time.10" value="1" />
           <entry key="project.open.time.11" value="1" />
           <entry key="project.open.time.21" value="1" />
@@ -327,13 +324,13 @@
       <window_info id="Designer" order="6" />
       <window_info id="Capture Tool" order="7" />
       <window_info anchor="bottom" id="Run" order="0" weight="0.3293718" />
-      <window_info active="true" anchor="bottom" id="Logcat" order="1" sideWeight="0.49924356" visible="true" weight="0.32767403" />
+      <window_info anchor="bottom" id="Logcat" order="1" sideWeight="0.49924356" weight="0.32767403" />
       <window_info anchor="bottom" id="TODO" order="2" weight="0.3293718" />
       <window_info anchor="bottom" id="Debug" order="3" />
       <window_info anchor="bottom" id="Terminal" order="4" />
       <window_info anchor="bottom" id="Event Log" order="5" sideWeight="0.50075644" side_tool="true" weight="0.3293718" />
       <window_info anchor="bottom" id="Version Control" order="6" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Build" order="7" weight="0.29711375" />
+      <window_info active="true" anchor="bottom" id="Build" order="7" visible="true" weight="0.29711375" />
       <window_info anchor="bottom" id="Android Profiler" order="8" />
       <window_info anchor="bottom" id="Find" order="9" weight="0.3293718" />
       <window_info anchor="right" id="Device File Explorer" order="0" side_tool="true" weight="0.32980332" />
