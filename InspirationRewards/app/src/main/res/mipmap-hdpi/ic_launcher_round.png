@@ -1,0 +1,151 @@
+package com.example.stockwatch;
+
+import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity
+{
+
+    private static final String TAG = "MainActivity";
+    public RecyclerView recyclerView;
+    private SwipeRefreshLayout swiper;
+
+    private StockAdapter stockAdapter;
+    List<Stock> stockList = new ArrayList<Stock>();
+    HashMap<String, String> initialMap;
+    private DatabaseHandler databaseHandler;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        Log.d(TAG, "onCreate: ");
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#000000")));
+
+        doAsyncLoadInitialData();
+
+        //stockList.add(new Stock("Test", "Amazon", 12.30, 0.50, 2.4));
+        recyclerView = findViewById(R.id.recyclerView);
+        stockAdapter = new StockAdapter(stockList, this);
+        Collections.sort(stockList, Collections.<Stock>reverseOrder());
+        recyclerView.setAdapter(stockAdapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        databaseHandler = new DatabaseHandler(this);
+
+        swiper = (SwipeRefreshLayout)findViewById(R.id.swipeRefreshLayout);
+        swiper.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshData();
+                //Set this to false else when the view is refreshed even if its task its done it shows the refreshing symbol
+                swiper.setRefreshing(false);
+            }
+        });
+    }
+
+
+    //This method will fetch new data by service call.
+    private void refreshData()
+    {
+        //ArrayList<Stock> list = databaseHandler.loadStocks();
+        //list.addAll(stockList);
+        //stockList.clear();
+        Log.d(TAG, "refreshData: stockList " + stockList);
+        for(Stock st:stockList)
+        {
+            //Delete old stock from db.
+            databaseHandler.deleteStock(st.getSymbol());
+
+            MyAsyncTaskLoadFinancialDetails at = new MyAsyncTaskLoadFinancialDetails(this);
+            at.execute(st.getSymbol());
+        }
+    }
+
+
+
+    @Override
+    protected void onResume() {
+        //databaseHandler.dumpDbToLog();
+        ArrayList<Stock> list = databaseHandler.loadStocks();
+        stockList.clear();
+        Log.d(TAG, "onResume: stockList " + stockList);
+        stockList.addAll(list);
+        Log.d(TAG, "onResume: " + list);
+        Collections.sort(stockList, Collections.<Stock>reverseOrder());
+        stockAdapter.notifyDataSetChanged();
+
+        super.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        databaseHandler.shutDown();
+        super.onDestroy();
+    }
+
+    //This method will load initial data and store it in a hashmap
+    private void doAsyncLoadInitialData()
+    {
+        MyAsyncTask at = new MyAsyncTask(this);
+        at.execute("");
+    }
+
+    //This method will populate map returned from service call by async task
+      void populateInitialMap(HashMap<String, String> initialMap)
+      {
+          this.initialMap = initialMap;
+      }
+
+    //This method ensures that menu is visible on the main activity.
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        getMenuInflater().inflate(R.menu.home_menu, menu);
+        return true;
+    }
+
+    //This method performs action when any of the menu item is clicked.
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+
+        switch (item.getItemId())
+        {
+            case R.id.addStock:
+                addStock();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void addStock()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // Create an edittext and set it to be the builder's view
+        final EditText et = new EditText(this);
+        et.setInputT
